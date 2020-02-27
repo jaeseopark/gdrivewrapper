@@ -31,15 +31,18 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def upload(service, media, key=None, **kwargs):
+def upload(service, media, key=None, folder_id=None, **kwargs):
     """
     Uploads the given data to google drive. This function can create a new file or update an existing file.
     :param service: Service object
     :param media: Data to upload
     :param key: (update-only) FileId of the file to update
+    :param folder_id: (Optional) FileId of the containing folder
     :param kwargs: keyword args
     :return:
     """
+    if folder_id:
+        kwargs["parents"] = [folder_id]
     if key:
         r = service.files().update(fileId=key, media_body=media).execute()
     else:
@@ -64,21 +67,19 @@ def download_bytes(service, key):
         return bytesio.getvalue()
 
 
-def create_folder(service, name, parent_id=None):
+def create_folder(service, name, folder_id=None, **kwargs):
     """
     Creates a folder and returns the FileId
     :param service: Service object
     :param name: name of the folder
-    :param parent_id: (Optional) FileId of the containing folder
+    :param folder_id: (Optional) FileId of the containing folder
     :return: folder object
     """
-    body = {
-        "name": name,
-        "mimeType": "application/vnd.google-apps.folder"
-    }
-    if parent_id:
-        body["parents"] = [parent_id]
-    return service.files().create(body=body).execute()
+    kwargs["name"] = name
+    kwargs["mimeType"] = "application/vnd.google-apps.folder"
+    if folder_id:
+        kwargs["parents"] = [folder_id]
+    return service.files().create(body=kwargs).execute()
 
 
 def create_comment(service, key, comment):
