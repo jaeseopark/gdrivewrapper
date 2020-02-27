@@ -10,7 +10,7 @@ A wrapper around Google Drive SDK. Covers basic operations like uploading a file
 from gdrivewrapper import GDriveWrapper
 
 api_scope = "https://www.googleapis.com/auth/drive.file"
-creds_path = "drive_v3_creds.json"
+creds_path = "./drive_v3_creds.json"
 
 gdw = GDriveWrapper(api_scope, creds_path)
 ```
@@ -67,16 +67,15 @@ gdw.upload(media, **metadata)
 
 ```python
 response = gdw.create_folder("myfolder1")
-folderid = response["id"]
 
 media = ...
-gdw.upload(media, parents=[folderid])
+gdw.upload(media, folder_id=response["id"])
 ```
 
 #### Add a comment to an existing file
 
 ```python
-upload_response = gdw.upload(...)
-key = upload_response["id"]
-gdw.create_comment(key, "this file is great!")
+media = ...
+response = gdw.upload(media)
+gdw.create_comment(key=response["id"], comment="this file is great!")
 ```
