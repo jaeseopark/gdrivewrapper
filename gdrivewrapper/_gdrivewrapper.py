@@ -1,5 +1,7 @@
 import io
 import os
+import ssl
+import time
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
@@ -31,24 +33,32 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def upload(service, media, key=None, folder_id=None, **kwargs):
+def upload(service, media, key=None, folder_id=None, ssl_retry_count=5, **kwargs):
     """
     Uploads the given data to google drive. This function can create a new file or update an existing file.
     :param service: Service object
     :param media: Data to upload
     :param key: (update-only) FileId of the file to update
     :param folder_id: (Optional) FileId of the containing folder
+    :param ssl_retry_count: number of times to retry upon SSLError
     :param kwargs: keyword args
     :return:
     """
     if folder_id:
         kwargs["parents"] = [folder_id]
-    if key:
-        r = service.files().update(fileId=key, media_body=media).execute()
-    else:
-        r = service.files().create(body=kwargs, media_body=media).execute()
 
-    return r
+    last_exception = None
+    for i in range(ssl_retry_count):
+        try:
+            if key:
+                return service.files().update(fileId=key, body=kwargs, media_body=media).execute()
+            else:
+                return service.files().create(body=kwargs, media_body=media).execute()
+        except ssl.SSLError as e:
+            last_exception = ssl.SSLError(e)
+            time.sleep(1)
+            continue
+    raise last_exception
 
 
 def download_bytes(service, key):
