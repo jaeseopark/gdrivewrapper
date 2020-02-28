@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 import ssl
 import time
@@ -7,6 +8,8 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from httplib2 import Http
 from oauth2client import file, client, tools
+
+logging.getLogger("googleapiclient").setLevel(logging.FATAL)
 
 
 def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
