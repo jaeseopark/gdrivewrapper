@@ -36,32 +36,34 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def upload(service, media, key=None, folder_id=None, ssl_retry_count=5, **kwargs):
+def upload(service, media, key=None, folder_id=None, retry_count=5, **kwargs):
     """
     Uploads the given data to google drive. This function can create a new file or update an existing file.
     :param service: Service object
     :param media: Data to upload
     :param key: (update-only) FileId of the file to update
     :param folder_id: (Optional) FileId of the containing folder
-    :param ssl_retry_count: number of times to retry upon SSLError
+    :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
     :param kwargs: keyword args
     :return:
     """
     if folder_id:
         kwargs["parents"] = [folder_id]
 
-    last_exception = None
-    for i in range(ssl_retry_count):
+    last_exception_msg = None
+    for i in range(retry_count):
         try:
             if key:
                 return service.files().update(fileId=key, body=kwargs, media_body=media).execute()
             else:
                 return service.files().create(body=kwargs, media_body=media).execute()
-        except ssl.SSLError as e:
-            last_exception = ssl.SSLError(e)
+        except (ssl.SSLError, BrokenPipeError) as e:
+            last_exception_msg = str(e)
             time.sleep(1)
             continue
-    raise last_exception
+
+    # Stacktrace is lost at this point in time. The next best thing is to create a new exception
+    raise RuntimeError(last_exception_msg)
 
 
 def download_bytes(service, key):
