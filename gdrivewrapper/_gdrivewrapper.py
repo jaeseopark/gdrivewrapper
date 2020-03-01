@@ -6,11 +6,22 @@ _lock = Lock()
 
 
 def _lock_and_call(func, *args, **kwargs):
+    class MockLogger:
+        def __init__(self):
+            pass
+
+        def debug(self, msg):
+            pass
+
+    logger = kwargs.pop("logger") if "logger" in kwargs else MockLogger()
+    logger.debug("Acquiring gdw lock...")
     _lock.acquire()
+    logger.debug("Acquired gdw lock")
     try:
         return func(*args, **kwargs)
     finally:
         _lock.release()
+        logger.debug("Released gdw lock")
 
 
 class GDriveWrapper:
