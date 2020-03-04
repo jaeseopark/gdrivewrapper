@@ -47,20 +47,13 @@ gdw.upload(media, name="mytextfile.txt")
 ```python
 import base64
 
+media = ...
+
 with open("image_path.png") as fp:
     image_bytes = fp.read() 
 
-media = ...
 image_bytes_b64 = base64.urlsafe_b64encode(image_bytes).decode('utf-8')
-metadata = {
-    'contentHints': {
-        'thumbnail': {
-            'image': image_bytes_b64,
-            "mimeType": "image/png"
-        }
-    }
-}
-gdw.upload(media, **metadata)
+gdw.upload(media, thumbnail=image_bytes_b64)
 ```
 
 #### Upload to a folder
