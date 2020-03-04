@@ -36,19 +36,30 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def upload(service, media, key=None, folder_id=None, retry_count=5, **kwargs):
+def upload(service, media, key=None, folder_id=None, thumbnail=None, retry_count=5, **kwargs):
     """
     Uploads the given data to google drive. This function can create a new file or update an existing file.
     :param service: Service object
     :param media: Data to upload
     :param key: (update-only) FileId of the file to update
     :param folder_id: (Optional) FileId of the containing folder
+    :param thumbnail: (Optional) bytearray for the thumbnail image, b64-encoded.
     :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
     :param kwargs: keyword args
     :return:
     """
     if folder_id:
         kwargs["parents"] = [folder_id]
+
+    if thumbnail:
+        content_hints = kwargs.get("contentHints", dict())
+        content_hints.update({
+            "thumbnail": {
+                "image": thumbnail,
+                "mimeType": "image/png"
+            }
+        })
+        kwargs["contentHints"] = content_hints
 
     last_exception_msg = None
     for i in range(retry_count):
