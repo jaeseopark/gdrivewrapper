@@ -95,7 +95,6 @@ def download_file(service, key, local_path):
     :param service: Service ojbect
     :param key: FileId of the file to download
     :param local_path: Destination path in the local filesystem
-    :return: bytearray
     """
     with open(local_path, "wb") as fp:
         _download(service, key, fp)
