@@ -26,7 +26,8 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     creds_filename = os.path.split(creds_path)[1]
     creds_basename = os.path.splitext(creds_filename)[0]
 
-    store = file.Storage(f"{creds_parent}/{creds_basename}_store.json")
+    token_path = os.path.join(creds_parent, f"{creds_basename}_store.json")
+    store = file.Storage(token_path)
     creds = store.get()
 
     if not creds or creds.invalid:
