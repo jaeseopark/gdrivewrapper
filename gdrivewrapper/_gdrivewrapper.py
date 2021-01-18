@@ -34,6 +34,9 @@ class GDriveWrapper:
     def download_bytes(self, *args, **kwargs):
         return _lock_and_call(download_bytes, self.svc, *args, **kwargs)
 
+    def download_file(self, *args, **kwargs):
+        return _lock_and_call(download_file, self.svc, *args, **kwargs)
+
     def create_folder(self, *args, **kwargs):
         return _lock_and_call(create_folder, self.svc, *args, **kwargs)
 

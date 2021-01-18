@@ -84,13 +84,29 @@ def download_bytes(service, key):
     :param key: FileId of the file to download
     :return: bytearray
     """
-    request = service.files().get_media(fileId=key)
     with io.BytesIO() as bytesio:
-        downloader = MediaIoBaseDownload(bytesio, request)
-        done = False
-        while done is False:
-            status, done = downloader.next_chunk()
+        _download(service, key, bytesio)
         return bytesio.getvalue()
+
+
+def download_file(service, key, local_path):
+    """
+    Downloads a file as bytearray
+    :param service: Service ojbect
+    :param key: FileId of the file to download
+    :param local_path: Destination path in the local filesystem
+    :return: bytearray
+    """
+    with open(local_path, "wb") as fp:
+        _download(service, key, fp)
+
+
+def _download(service, key, fp):
+    request = service.files().get_media(fileId=key)
+    downloader = MediaIoBaseDownload(fp, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
 
 
 def create_folder(service, name, folder_id=None, **kwargs):
