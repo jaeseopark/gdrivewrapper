@@ -25,17 +25,24 @@ def _lock_and_call(func, *args, **kwargs):
 
 
 class GDriveWrapper:
-    def __init__(self, scopes: str, creds_path: str):
+    def __init__(self, scopes: str, creds_path: str, lock_downloads=False):
         self.svc = get_service_object(scopes, creds_path)
+        self.lock_downloads = lock_downloads
 
     def upload(self, *args, **kwargs):
         return _lock_and_call(upload, self.svc, *args, **kwargs)
 
     def download_bytes(self, *args, **kwargs):
-        return _lock_and_call(download_bytes, self.svc, *args, **kwargs)
+        if self.lock_downloads:
+            return _lock_and_call(download_bytes, self.svc, *args, **kwargs)
+        else:
+            return download_bytes(self.svc, *args, **kwargs)
 
     def download_file(self, *args, **kwargs):
-        return _lock_and_call(download_file, self.svc, *args, **kwargs)
+        if self.lock_downloads:
+            return _lock_and_call(download_file, self.svc, *args, **kwargs)
+        else:
+            return download_file(self.svc, *args, **kwargs)
 
     def create_folder(self, *args, **kwargs):
         return _lock_and_call(create_folder, self.svc, *args, **kwargs)
