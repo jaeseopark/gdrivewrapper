@@ -31,7 +31,7 @@ class GDriveWrapper:
 
     def upload(self, *args, **kwargs):
         if self.allow_concurrent_calls:
-            return self.upload(self.svc, *args, **kwargs)
+            return upload(self.svc, *args, **kwargs)
         return _lock_and_call(upload, self.svc, *args, **kwargs)
 
     def download_bytes(self, *args, **kwargs):
