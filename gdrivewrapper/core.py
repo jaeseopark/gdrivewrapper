@@ -22,8 +22,6 @@ def get_service_object(scopes, creds_path, api_name="drive", api_version="v3"):
     :return: A Service object
     """
 
-    assert os.path.exists(creds_path)
-
     creds_parent = os.path.split(creds_path)[0]
     creds_filename = os.path.split(creds_path)[1]
     creds_basename = os.path.splitext(creds_filename)[0]
