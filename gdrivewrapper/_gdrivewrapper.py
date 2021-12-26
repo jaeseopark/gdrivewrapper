@@ -4,6 +4,7 @@ import os
 import ssl
 import time
 from typing import Union, List
+from typing.io import BinaryIO, IO
 
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
@@ -42,7 +43,7 @@ def get_service_object(scopes: Union[str, List[str]], creds_path: str, api_name=
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def _download(service, key, fp, max_bytes_per_second: int = None):
+def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int = None):
     request = service.files().get_media(fileId=key)
     downloader = MediaIoBaseDownload(fp, request)
 
@@ -67,7 +68,7 @@ def _download(service, key, fp, max_bytes_per_second: int = None):
 
 
 class GDriveWrapper:
-    def __init__(self, scopes: str, creds_path: str, allow_concurrent_calls=True):
+    def __init__(self, scopes: Union[str, List[str]], creds_path: str, allow_concurrent_calls=True):
         self.svc = get_service_object(scopes, creds_path)
         if not allow_concurrent_calls:
             prevent_concurrent_calls(self)
