@@ -1,1 +1,1 @@
-from gdrivewrapper._gdrivewrapper import GDriveWrapper
+from gdrivewrapper.wrapper import GDriveWrapper
