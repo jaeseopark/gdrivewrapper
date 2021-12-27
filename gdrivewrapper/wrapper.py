@@ -9,7 +9,6 @@ from typing.io import BinaryIO, IO
 from commmons import with_retry
 from googleapiclient.http import MediaIoBaseDownload, MediaUpload
 
-from gdrivewrapper.decorator.single import prevent_concurrent_calls
 from gdrivewrapper.service import get_service_object
 
 logging.getLogger("googleapiclient").setLevel(logging.FATAL)
@@ -62,10 +61,8 @@ def _get_upload_body(name: str = None, folder_id: str = None, thumbnail: bytes =
 
 
 class GDriveWrapper:
-    def __init__(self, scopes: Union[str, List[str]], creds_path: str, allow_concurrent_calls=True):
+    def __init__(self, scopes: Union[str, List[str]], creds_path: str):
         self.svc = get_service_object(scopes, creds_path)
-        if not allow_concurrent_calls:
-            prevent_concurrent_calls(self)
 
     def upload(self, media: MediaUpload, key: str = None, name: str = None, folder_id: str = None,
                thumbnail: bytes = None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT):

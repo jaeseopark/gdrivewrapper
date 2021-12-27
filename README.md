@@ -12,10 +12,7 @@ from gdrivewrapper import GDriveWrapper
 api_scope = "https://www.googleapis.com/auth/drive.file"
 creds_path = "./drive_v3_creds.json"
 
-gdw = GDriveWrapper(
-    api_scope, creds_path,
-    allow_concurrent_calls=False  # Default is True
-)
+gdw = GDriveWrapper(api_scope, creds_path)
 ```
 
 #### Upload a local file
