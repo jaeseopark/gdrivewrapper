@@ -43,28 +43,13 @@ def get_service_object(scopes: Union[str, List[str]], creds_path: str, api_name=
     return build(api_name, api_version, http=creds.authorize(Http()))
 
 
-def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int = None):
+def _download(service, key, fp: Union[IO, BinaryIO]):
     request = service.files().get_media(fileId=key)
     downloader = MediaIoBaseDownload(fp, request)
 
     done = False
-    prev_time = time.perf_counter()
-    prev_bytes = 0
-
     while not done:
         status, done = downloader.next_chunk()
-
-        if max_bytes_per_second:
-            current_time = time.perf_counter()
-            bytes_since_last_checked = status.total_size - prev_bytes
-            actual_speed = bytes_since_last_checked / (current_time - prev_time)
-
-            excess_ratio = actual_speed / max_bytes_per_second - 1
-            if excess_ratio > 0:
-                time.sleep(excess_ratio * max_bytes_per_second)
-
-            prev_time = current_time
-            prev_bytes = status.total_size
 
 
 class GDriveWrapper:
@@ -112,26 +97,24 @@ class GDriveWrapper:
         # Stacktrace is lost at this point in time. The next best thing is to create a new exception
         raise RuntimeError(last_exception_msg)
 
-    def download_bytes(self, key: str, max_bytes_per_second: int = None) -> bytes:
+    def download_bytes(self, key: str) -> bytes:
         """
         Downloads a file as bytearray
         :param key: FileId of the file to download
-        :param max_bytes_per_second: the maximum speed the function can download the file at.
         :return: bytes
         """
         with io.BytesIO() as bytesio:
-            _download(self.svc, key, fp=bytesio, max_bytes_per_second=max_bytes_per_second)
+            _download(self.svc, key, fp=bytesio)
             return bytesio.getvalue()
 
-    def download_file(self, key, local_path, max_bytes_per_second: int = None):
+    def download_file(self, key, local_path):
         """
         Downloads a file as bytearray
         :param key: FileId of the file to download
         :param local_path: Destination path in the local filesystem
-        :param max_bytes_per_second: the maximum speed the function can download the file at.
         """
         with open(local_path, "wb") as fp:
-            _download(self.svc, key, fp, max_bytes_per_second=max_bytes_per_second)
+            _download(self.svc, key, fp)
 
     def create_folder(self, name, folder_id=None, **kwargs):
         """
