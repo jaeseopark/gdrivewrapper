@@ -52,12 +52,16 @@ class GDriveWrapper:
         Uploads the given data to google drive. This function can create a new file or update an existing file.
         :param media: Data to upload
         :param key: (update-only) FileId of the file to update
+        :param name: Display name of the file
         :param folder_id: (Optional) FileId of the containing folder
         :param thumbnail: (Optional) bytearray for the thumbnail image, b64-encoded.
         :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
         :return:
         """
         body = dict()
+
+        if name:
+            body["name"] = name
 
         if folder_id:
             body["parents"] = [folder_id]
