@@ -1,14 +1,9 @@
-import logging
 import os
 from typing import Union, List
 
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-
-logging.getLogger("googleapiclient").setLevel(logging.FATAL)
-
-DEFAULT_UPLOAD_RETRY_COUNT = 5
 
 
 def get_service_object(scopes: Union[str, List[str]], creds_path: str, api_name="drive", api_version="v3"):

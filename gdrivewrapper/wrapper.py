@@ -13,7 +13,7 @@ from gdrivewrapper.service import get_service_object
 
 logging.getLogger("googleapiclient").setLevel(logging.FATAL)
 
-DEFAULT_UPLOAD_RETRY_COUNT = 5
+DEFAULT_UPLOAD_ATTEMPTS = 3
 
 
 def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int = None):
@@ -65,7 +65,7 @@ class GDriveWrapper:
         self.svc = get_service_object(scopes, creds_path)
 
     def upload(self, media: MediaUpload, key: str = None, name: str = None, folder_id: str = None,
-               thumbnail: bytes = None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT):
+               thumbnail: bytes = None, max_upload_attempts=DEFAULT_UPLOAD_ATTEMPTS):
         """
         Uploads the given data to google drive. This function can create a new file or update an existing file.
         :param media: Data to upload
@@ -73,7 +73,7 @@ class GDriveWrapper:
         :param name: Display name of the file
         :param folder_id: (Optional) FileId of the containing folder
         :param thumbnail: (Optional) bytes for the thumbnail
-        :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
+        :param max_upload_attempts: Total number of attempts to perform a successful upload
         :return:
         """
 
@@ -84,7 +84,7 @@ class GDriveWrapper:
             func = self.svc.files().update
             kwargs.update({"fileId": key})
 
-        func_with_retry = with_retry(func, retry_count, acceptable_exceptions=[ssl.SSLError, BrokenPipeError])
+        func_with_retry = with_retry(func, max_upload_attempts, acceptable_exceptions=[ssl.SSLError, BrokenPipeError])
         return func_with_retry(**kwargs)
 
     def download_bytes(self, key: str, max_bytes_per_second: int = None) -> bytes:
