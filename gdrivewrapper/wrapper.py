@@ -1,3 +1,4 @@
+import base64
 import io
 import logging
 import ssl
@@ -40,6 +41,26 @@ def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int =
             prev_bytes = status.total_size
 
 
+def _get_upload_body(name: str = None, folder_id: str = None, thumbnail: bytes = None) -> dict:
+    body = dict()
+
+    if name:
+        body["name"] = name
+
+    if folder_id:
+        body["parents"] = [folder_id]
+
+    if thumbnail:
+        body["contentHints"] = {
+            "thumbnail": {
+                "image": base64.encodebytes(thumbnail).decode("utf-8"),
+                "mimeType": "image/png"
+            }
+        }
+
+    return body
+
+
 class GDriveWrapper:
     def __init__(self, scopes: Union[str, List[str]], creds_path: str, allow_concurrent_calls=True):
         self.svc = get_service_object(scopes, creds_path)
@@ -47,35 +68,20 @@ class GDriveWrapper:
             prevent_concurrent_calls(self)
 
     def upload(self, media: MediaUpload, key: str = None, name: str = None, folder_id: str = None,
-               thumbnail: dict = None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT):
+               thumbnail: bytes = None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT):
         """
         Uploads the given data to google drive. This function can create a new file or update an existing file.
         :param media: Data to upload
         :param key: (update-only) FileId of the file to update
         :param name: Display name of the file
         :param folder_id: (Optional) FileId of the containing folder
-        :param thumbnail: (Optional) bytearray for the thumbnail image, b64-encoded.
+        :param thumbnail: (Optional) bytes for the thumbnail
         :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
         :return:
         """
-        body = dict()
-
-        if name:
-            body["name"] = name
-
-        if folder_id:
-            body["parents"] = [folder_id]
-
-        if thumbnail:
-            body["contentHints"] = {
-                "thumbnail": {
-                    "image": thumbnail,
-                    "mimeType": "image/png"
-                }
-            }
 
         func = self.svc.files().create
-        kwargs = {"body": body, "media_body": media}
+        kwargs = {"body": _get_upload_body(name=name, folder_id=folder_id, thumbnail=thumbnail), "media_body": media}
 
         if key:
             func = self.svc.files().update
