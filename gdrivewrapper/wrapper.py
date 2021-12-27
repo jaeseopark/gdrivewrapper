@@ -95,7 +95,7 @@ class GDriveWrapper:
             _download(self.svc, key, fp=bytesio, max_bytes_per_second=max_bytes_per_second)
             return bytesio.getvalue()
 
-    def download_file(self, key, local_path, max_bytes_per_second: int = None):
+    def download_file(self, key: str, local_path: str, max_bytes_per_second: int = None):
         """
         Downloads a file as bytearray
         :param key: FileId of the file to download
@@ -105,7 +105,7 @@ class GDriveWrapper:
         with open(local_path, "wb") as fp:
             _download(self.svc, key, fp, max_bytes_per_second=max_bytes_per_second)
 
-    def create_folder(self, name, folder_id=None, **kwargs):
+    def create_folder(self, name: str, folder_id: str = None, **kwargs):
         """
         Creates a folder and returns the FileId
         :param name: name of the folder
@@ -118,7 +118,7 @@ class GDriveWrapper:
             kwargs["parents"] = [folder_id]
         return self.svc.files().create(body=kwargs).execute()
 
-    def create_comment(self, key, comment):
+    def create_comment(self, key: str, comment: str):
         """
         Posts a comment to an existing file
         :param key: FileId of the file to post comment to
