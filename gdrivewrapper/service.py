@@ -11,7 +11,7 @@ logging.getLogger("googleapiclient").setLevel(logging.FATAL)
 DEFAULT_UPLOAD_RETRY_COUNT = 5
 
 
-def get_service_object(scopes: Union[str, List[str]], creds_path: str, api_name="drive", api_version="v3") -> Resource:
+def get_service_object(scopes: Union[str, List[str]], creds_path: str, api_name="drive", api_version="v3"):
     """
     Creates a Service object
     :param scopes: scope of the service (ex. "https://www.googleapis.com/auth/drive.file")
