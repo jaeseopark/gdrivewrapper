@@ -5,7 +5,8 @@ import time
 from typing import Union, List
 from typing.io import BinaryIO, IO
 
-from googleapiclient.http import MediaIoBaseDownload
+from commmons import with_retry
+from googleapiclient.http import MediaIoBaseDownload, MediaUpload
 
 from gdrivewrapper.decorator.single import prevent_concurrent_calls
 from gdrivewrapper.service import get_service_object
@@ -45,7 +46,8 @@ class GDriveWrapper:
         if not allow_concurrent_calls:
             prevent_concurrent_calls(self)
 
-    def upload(self, media, key=None, folder_id=None, thumbnail=None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT, **kwargs):
+    def upload(self, media: MediaUpload, key: str = None, name: str = None, folder_id: str = None,
+               thumbnail: dict = None, retry_count=DEFAULT_UPLOAD_RETRY_COUNT):
         """
         Uploads the given data to google drive. This function can create a new file or update an existing file.
         :param media: Data to upload
@@ -53,36 +55,30 @@ class GDriveWrapper:
         :param folder_id: (Optional) FileId of the containing folder
         :param thumbnail: (Optional) bytearray for the thumbnail image, b64-encoded.
         :param retry_count: number of times to retry upon common errors such as SSLError/BrokenPipeError
-        :param kwargs: keyword args
         :return:
         """
+        body = dict()
+
         if folder_id:
-            kwargs["parents"] = [folder_id]
+            body["parents"] = [folder_id]
 
         if thumbnail:
-            content_hints = kwargs.get("contentHints", dict())
-            content_hints.update({
+            body["contentHints"] = {
                 "thumbnail": {
                     "image": thumbnail,
                     "mimeType": "image/png"
                 }
-            })
-            kwargs["contentHints"] = content_hints
+            }
 
-        last_exception_msg = None
-        for i in range(retry_count):
-            try:
-                if key:
-                    return self.svc.files().update(fileId=key, body=kwargs, media_body=media).execute()
-                else:
-                    return self.svc.files().create(body=kwargs, media_body=media).execute()
-            except (ssl.SSLError, BrokenPipeError) as e:
-                last_exception_msg = str(e)
-                time.sleep(1)
-                continue
+        func = self.svc.files().create
+        kwargs = {"body": body, "media_body": media}
 
-        # Stacktrace is lost at this point in time. The next best thing is to create a new exception
-        raise RuntimeError(last_exception_msg)
+        if key:
+            func = self.svc.files().update
+            kwargs.update({"fileId": key})
+
+        func_with_retry = with_retry(func, retry_count, acceptable_exceptions=[ssl.SSLError, BrokenPipeError])
+        return func_with_retry(**kwargs)
 
     def download_bytes(self, key: str, max_bytes_per_second: int = None) -> bytes:
         """
