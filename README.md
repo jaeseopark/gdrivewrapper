@@ -50,10 +50,9 @@ import base64
 media = ...
 
 with open("image_path.png") as fp:
-    image_bytes = fp.read() 
+    image_bytes = fp.read()
 
-image_bytes_b64 = base64.urlsafe_b64encode(image_bytes).decode('utf-8')
-gdw.upload(media, thumbnail=image_bytes_b64)
+gdw.upload(media, thumbnail=image_bytes)
 ```
 
 #### Upload to a folder
