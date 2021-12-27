@@ -10,34 +10,33 @@ from commmons import with_retry
 from googleapiclient.http import MediaIoBaseDownload, MediaUpload
 
 from gdrivewrapper.service import get_service_object
+from gdrivewrapper.throttle import get_chunk_size
 
 logging.getLogger("googleapiclient").setLevel(logging.FATAL)
 
 DEFAULT_UPLOAD_ATTEMPTS = 3
 
 
-def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int = None):
+def _download(service, key, fp: Union[IO, BinaryIO], max_bytes_per_second: int):
     request = service.files().get_media(fileId=key)
-    downloader = MediaIoBaseDownload(fp, request)
+    chunk_size = get_chunk_size(max_bytes_per_second)
+    downloader = MediaIoBaseDownload(fp, request, chunksize=chunk_size)
 
     done = False
     prev_time = time.perf_counter()
-    prev_bytes = 0
 
     while not done:
         status, done = downloader.next_chunk()
 
-        if max_bytes_per_second:
+        if not done and max_bytes_per_second:
             current_time = time.perf_counter()
-            bytes_since_last_checked = status.total_size - prev_bytes
-            actual_speed = bytes_since_last_checked / (current_time - prev_time)
+            actual_speed = chunk_size / (current_time - prev_time)
 
-            excess_ratio = actual_speed / max_bytes_per_second - 1
-            if excess_ratio > 0:
-                time.sleep(excess_ratio * max_bytes_per_second)
+            extra_time = actual_speed / max_bytes_per_second - 1
+            if extra_time > 0:
+                time.sleep(extra_time)
 
             prev_time = current_time
-            prev_bytes = status.total_size
 
 
 def _get_upload_body(name: str = None, folder_id: str = None, thumbnail: bytes = None) -> dict:
